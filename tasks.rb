@@ -2,6 +2,7 @@ require 'rbconfig'
 require 'pathname'
 require 'fileutils'
 require 'shellwords'
+require 'yaml'
 
 ROOT ||= Pathname.new(__FILE__).parent.parent
 
@@ -30,6 +31,24 @@ class BrowserifyRunner
     include Rake::DSL
     
     @@js_deps = Hash.new
+    @@root = ROOT
+
+    def load!(path = File.join(root, '.deps.rake'))
+      @@js_deps = YAML.load(File.read(path))
+      $stderr.puts("Loaded deps from #{path}");
+    rescue
+      $stderr.puts("Error #{$!} loading deps from #{path}");
+      at_exit do
+        File.open(path, 'w') do |f|
+          $stderr.puts("Saving deps to #{path}")
+          f.write(BrowserifyRunner.js_deps.to_yaml)
+        end
+      end
+    end
+
+    def js_deps
+      @@js_deps
+    end
 
     def root
       @@root || ROOT
@@ -63,3 +82,5 @@ class BrowserifyRunner
     end
   end
 end
+
+BrowserifyRunner.load!
