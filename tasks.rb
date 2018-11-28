@@ -38,14 +38,21 @@ class BrowserifyRunner
       $stderr.puts("Loaded deps from #{path}");
     rescue
       $stderr.puts("Error #{$!} loading deps from #{path}");
-      at_exit do
-        File.open(path, 'w') do |f|
-          $stderr.puts("Saving deps to #{path}")
-          f.write(BrowserifyRunner.js_deps.to_yaml)
-        end
-      end
     end
 
+    def hook_exit!(path = File.join(root, '.deps.rake'))
+      at_exit do
+        BrowserifyRunner.save_deps!(path)
+      end
+    end
+    
+    def save_deps!(path)
+      File.open(path, 'w') do |f|
+        $stderr.puts("Saving deps to #{path}")
+        f.write(BrowserifyRunner.js_deps.to_yaml)
+      end
+    end
+    
     def js_deps
       @@js_deps
     end
@@ -81,6 +88,15 @@ class BrowserifyRunner
       end
     end
   end
+
+  module Tasks
+    include Rake::DSL
+
+    def self.included(mod)
+      BrowserifyRunner.load!
+      BrowserifyRunner.hook_exit!
+    end
+  end
 end
 
-BrowserifyRunner.load!
+include BrowserifyRunner::Tasks
