@@ -12,12 +12,12 @@ NODE_DELIM = if RbConfig::CONFIG['EXEEXT'] == '.exe'
                ':'
              end
 
-NODE_PATH ||= [
-	ROOT.join('bacaw', 'js', 'lib').to_s,
-        ROOT.join('bacaw', 'www').to_s,
-	ROOT.glob('bacaw/node_modules/*/lib').collect(&:to_s),
-        ROOT.join('the-bacaw').to_s
-].flatten.join(NODE_DELIM)
+NODE_PATH ||= []
+NODE_PATH << [ ROOT.join('bacaw', 'js', 'lib').to_s,
+               ROOT.join('bacaw', 'www').to_s,
+               ROOT.glob('bacaw/node_modules/*/lib').collect(&:to_s),
+               ROOT.join('the-bacaw').to_s
+             ]
 
 def html_file(opts, &block)
   opts.each do |file, src|
@@ -68,7 +68,7 @@ class BrowserifyRunner
     end
 
     def set_env!
-      ENV['NODE_PATH'] = NODE_PATH
+      ENV['NODE_PATH'] = NODE_PATH.flatten.join(NODE_DELIM)
     end
     
     def js_deps_for(file)
@@ -85,7 +85,7 @@ class BrowserifyRunner
       opts.each do |target, src|
         deps = js_deps_for(src.first)
         file target => deps do |t|
-          sh("browserify #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
+          sh("browserify -t brfs #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
         end
       end
     end
