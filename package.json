@@ -1,0 +1,11 @@
+{
+   "name": "rake-browserify",
+   "version": "0.0.1",
+   "private": true,
+   "scripts": {
+   },
+   "dependencies": {
+     "brfs": "~2.0.1",
+     "browserify": "~16.2.3"
+   }
+}

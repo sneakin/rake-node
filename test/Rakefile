@@ -1,0 +1,24 @@
+require 'pathname'
+root = Pathname.new(__FILE__).parent
+$: << root.parent.join('lib').to_s
+
+require 'rake/browserify'
+
+directory './build'
+
+html_file 'build/test.html' => [ 'test.src.html', './build' ]
+BrowserifyRunner.bundle 'build/test.js' => [ 'test.js', 'testlib.js', './build' ]
+
+task :build => [ 'build/test.html', 'build/test.js' ]
+
+task :verify => :build do
+  Dir.exists?(root.join('build')) || fail
+  File.exists?(root.join('build', 'test.html')) || fail
+  File.exists?(root.join('build', 'test.js')) || fail
+end
+
+task :clean do
+  sh("rm -rf #{Shellwords.escape(root.join('build'))}")
+end
+
+task :default => [ :verify ]

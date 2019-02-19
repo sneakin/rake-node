@@ -4,7 +4,7 @@ require 'fileutils'
 require 'shellwords'
 require 'yaml'
 
-ROOT ||= Pathname.new(__FILE__).parent.parent
+ROOT ||= Pathname.new(__FILE__).parent.parent.parent
 
 NODE_DELIM = if RbConfig::CONFIG['EXEEXT'] == '.exe'
                ';'
@@ -13,11 +13,7 @@ NODE_DELIM = if RbConfig::CONFIG['EXEEXT'] == '.exe'
              end
 
 NODE_PATH ||= []
-NODE_PATH << [ ROOT.join('bacaw', 'js', 'lib').to_s,
-               ROOT.join('bacaw', 'www').to_s,
-               ROOT.glob('bacaw/node_modules/*/lib').collect(&:to_s),
-               ROOT.join('the-bacaw').to_s
-             ]
+NODE_PATH << ROOT.glob('node_modules/*/lib').collect(&:to_s)
 
 def html_file(opts, &block)
   opts.each do |file, src|
