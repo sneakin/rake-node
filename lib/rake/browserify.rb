@@ -13,7 +13,7 @@ NODE_DELIM = if RbConfig::CONFIG['EXEEXT'] == '.exe'
              end
 
 NODE_PATH ||= []
-NODE_PATH << ROOT.glob('node_modules/*/lib').collect(&:to_s)
+NODE_PATH << Pathname.glob(ROOT.join('node_modules/*/lib')).collect(&:to_s)
 
 def html_file(opts, &block)
   opts.each do |file, src|
