@@ -14,6 +14,7 @@ module RakeNode
         super
         res['Access-Control-Allow-Origin'] = '*'
         res['Access-Control-Request-Method'] = '*'
+        res['Cache-Control'] = 'no-cache,max-age=0'
         res['ServerName'] = @domain
       end
     end
@@ -25,9 +26,9 @@ module RakeNode
     end
     
     def self.open_certificate(base_path, opts = {})
-      domains = opts.fetch(:domains, '').split(',')
+      domains = (opts[:domains] || '').split(',')
       domain = domains.first || WEBrick::Utils.getservername
-      ip = opts.fetch(:ip, '').split(',')
+      ip = (opts[:ip] || '').split(',')
       san = opts[:san]
       unless san
         san = san_string([domain], ip)
