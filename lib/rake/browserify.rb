@@ -25,7 +25,7 @@ def html_file(opts, &block)
 end
 
 class BrowserifyRunner
-  if ENV.fetch('ENV') == 'production'
+  if ENV['ENV'] == 'production'
     DefaultOptions = {
       :plugins => nil,
       :transforms => [ 'brfs' ],
