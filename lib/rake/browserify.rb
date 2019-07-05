@@ -25,6 +25,19 @@ def html_file(opts, &block)
 end
 
 class BrowserifyRunner
+  if ENV.fetch('ENV') == 'production'
+    DefaultOptions = {
+      :plugins => nil,
+      :transforms => [ 'brfs' ],
+      :globals => [ 'uglifyify' ]
+    }
+  else
+    DefaultOptions = {
+      :plugins => nil,
+      :transforms => [ 'brfs' ]
+    }
+  end
+
   class << self
     include Rake::DSL
     
@@ -75,13 +88,30 @@ class BrowserifyRunner
       }
     end
 
-    def bundle(opts)
+    def collect_arguments(opt, values)
+      if values && !values.empty?
+        values.each.reduce(Array.new) do |out, v|
+          out << opt << Shellwords.escape(v)
+          out
+        end
+      end
+    end
+    
+    def bundle(targets, opts = nil)
+      opts = DefaultOptions.merge(opts || {})
+
+      args = []
+      args << collect_arguments("-p", opts[:plugins])
+      args << collect_arguments("-t", opts[:transforms])
+      args << collect_arguments("-g", opts[:globals])
+      args = args.flatten.join(' ')
+      
       set_env!
       
-      opts.each do |target, src|
+      targets.each do |target, src|
         deps = js_deps_for(src.first)
         file target => deps do |t|
-          sh("browserify -t brfs #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
+          sh("browserify #{args} #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
         end
       end
     end
