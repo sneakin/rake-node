@@ -14,6 +14,8 @@ NODE_DELIM = if RbConfig::CONFIG['EXEEXT'] == '.exe'
 
 NODE_PATH ||= []
 NODE_PATH << ROOT.glob('node_modules/*/lib').collect(&:to_s)
+NODE_BIN_PATH = `npm bin`.strip
+BROWSERIFY_BIN = File.join(NODE_BIN_PATH, 'browserify')
 
 def html_file(opts, &block)
   opts.each do |file, src|
@@ -45,8 +47,13 @@ class BrowserifyRunner
     @@root = ROOT
 
     def load!(path = File.join(root, '.deps.rake'))
-      @@js_deps = YAML.load(File.read(path))
-      $stderr.puts("Loaded deps from #{path}");
+      deps = YAML.load(File.read(path))
+      if deps
+        @@js_deps = deps
+        $stderr.puts("Loaded deps from #{path}");
+      else
+        $stderr.puts("failed to load deps from #{path}")
+      end
     rescue
       $stderr.puts("Error #{$!} loading deps from #{path}");
     end
@@ -82,7 +89,7 @@ class BrowserifyRunner
     
     def js_deps_for(file)
       set_env!
-      @@js_deps[file] ||= `browserify --list #{Shellwords.escape(file)}`.
+      @@js_deps[file] ||= `#{BROWSERIFY_BIN} --list #{Shellwords.escape(file)}`.
         each_line.collect { |p|
         Pathname.new(p.chomp).expand_path.to_s
       }
@@ -111,7 +118,7 @@ class BrowserifyRunner
       targets.each do |target, src|
         deps = js_deps_for(src.first)
         file target => deps do |t|
-          sh("browserify #{args} #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
+          sh("#{BROWSERIFY_BIN} #{args} #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
         end
       end
     end
