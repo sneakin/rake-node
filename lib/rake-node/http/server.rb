@@ -26,13 +26,6 @@ module RakeNode
     end
     
     def self.open_certificate(base_path, opts = {})
-      domains = (opts[:domains] || '').split(',')
-      domain = domains.first || WEBrick::Utils.getservername
-      ip = (opts[:ip] || '').split(',')
-      san = opts[:san]
-      unless san
-        san = san_string([domain], ip)
-      end
       ca_cert = opts.fetch(:ca_cert, nil)
       ca_key = opts.fetch(:ca_key, nil)
 
@@ -43,7 +36,13 @@ module RakeNode
         key = OpenSSL::PKey::RSA.new(File.read(key_path))
         cert = OpenSSL::X509::Certificate.new(File.read(cert_path))
       else
+        domains = opts.fetch(:domains, '').split(',')
+        domains = [ WEBrick::Utils.getservername ] if domains.empty?
+        domain = domains.first
+        ip = (opts[:ip] || '').split(',')
+        san = opts.fetch(:san) { san_string(domains, ip) }
         cn = [["CN", domain]]
+
         cert, key = WEBrick::Utils.create_self_signed_cert(4096, cn, "",
                                                            san: san,
                                                            ca_cert: ca_cert,
@@ -65,7 +64,7 @@ module RakeNode
       ssl_opts = {}
       if opts[:SSLCertPrefix]
         cert, key = open_certificate(opts.fetch(:SSLCertPrefix),
-                                     domain: opts.fetch(:Domain, nil),
+                                     domains: opts.fetch(:Domain, nil),
                                      ip: opts.fetch(:IP, nil))
 
         ssl_opts = {
