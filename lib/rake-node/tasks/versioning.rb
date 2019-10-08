@@ -46,7 +46,7 @@ module RakeNode
           { major: 0, minor: 1, release: 2 }.each do |name, index|
             desc "Bump the #{name} version number in #{version_path}."
             task name do
-              v = read_version
+              v = read_version(version_path)
               v[index] += 1
               write_version(v, version_path)
               write_version_io(v, $stdout)
