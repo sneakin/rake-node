@@ -42,7 +42,9 @@ module RakeNode
     end
 
     def license_json_file(path)
-      file path => 'package.json' do |t|
+      directory File.dirname(path)
+      
+      file path => [ 'package.json', File.dirname(path) ] do |t|
         sh("license-checker --json > #{t.name}")
       end
     end
