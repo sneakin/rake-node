@@ -1,12 +1,15 @@
 module RakeNode
   module Versioning
-    def read_version(path = $root.join('version.txt'))
-      v = File.read(path)
+    def read_version(path)
+      parse_version(File.read(path))
+    end
+
+    def parse_version(v)
       p = v.match(/(\d+)\.(\d+)\.(\d+)/)
       if p
-        v = [ p[1], p[2], p[3] ].collect(&:to_i)
+        [ p[1], p[2], p[3] ].collect(&:to_i)
       else
-        v = [ 0, 0, 0 ]
+        [ 0, 0, 0 ]
       end
     end
 
@@ -18,10 +21,15 @@ module RakeNode
       io.puts(version_string(v))
     end
 
-    def write_version(v, path = $root.join('version.txt'))
+    def write_version(v, path)
       File.open(path, 'w') do |f|
         write_version_io(v, f)
       end
+    end
+
+    def commit_version(version_path)
+      v = version_string(read_version(version_path))
+      sh("git commit -m 'Bumped version to #{v}.' #{version_path}")
     end
 
     def generate_versioning(version_path)
@@ -31,12 +39,7 @@ module RakeNode
         end
 
         task :commit do
-          commit_version
-        end
-
-        def commit_version
-          v = version_string(read_version(version_path))
-          sh("git commit -m 'Bumped version to #{v}.' #{version_path}")
+          commit_version(version_path)
         end
 
         namespace :bump do
@@ -47,7 +50,7 @@ module RakeNode
               v[index] += 1
               write_version(v, version_path)
               write_version_io(v, $stdout)
-              commit_version
+              commit_version(version_path)
             end
           end
         end
