@@ -117,7 +117,7 @@ class BrowserifyRunner
       
       targets.each do |target, src|
         deps = js_deps_for(src.first)
-        file target => deps do |t|
+        file target => deps + src do |t|
           sh("#{BROWSERIFY_BIN} #{args} #{Shellwords.escape(src.first)} -o #{Shellwords.escape(t.name)}")
         end
       end
